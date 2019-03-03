@@ -48,8 +48,12 @@
 
 static const char *config_keys[] = {
     "Device",         "MountPoint",   "FSType",         "IgnoreSelected",
-    "ReportByDevice", "ReportInodes", "ValuesAbsolute", "ValuesPercentage"};
+    "ReportByDevice", "ReportInodes", "ValuesAbsolute", "ValuesPercentage",
+    "RootDirName"};
 static int config_keys_num = STATIC_ARRAY_SIZE(config_keys);
+
+/* Plugin instance for "/" mountpoint */
+static char *rootdirname = "root";
 
 static ignorelist_t *il_device;
 static ignorelist_t *il_mountpoint;
@@ -123,6 +127,13 @@ static int df_config(const char *key, const char *value) {
       values_percentage = false;
 
     return 0;
+  } else if (strcasecmp(key, "RootDirName") == 0) {
+    if (rootdirname != NULL)
+      free(rootdirname);
+    if ((rootdirname = strdup(value)) == NULL)
+      return 1;
+    else
+      return 0;
   }
 
   return -1;
@@ -223,7 +234,7 @@ static int df_read(void) {
       }
     } else {
       if (strcmp(mnt_ptr->dir, "/") == 0)
-        sstrncpy(disk_name, "root", sizeof(disk_name));
+        sstrncpy(disk_name, rootdirname, sizeof(disk_name));
       else {
         sstrncpy(disk_name, mnt_ptr->dir + 1, sizeof(disk_name));
         size_t len = strlen(disk_name);
